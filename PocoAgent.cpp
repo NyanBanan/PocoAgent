@@ -1,5 +1,6 @@
 #include "PocoAgent.h"
-
+#include "ISender.h"
+#include <Poco/ClassLoader.h>
 PocoAgent::PocoAgent(/* args */){
     agentRequester = Poco::makeShared<Requester>();
 }
@@ -16,9 +17,18 @@ int PocoAgent::main(const std::vector<std::string>& args){
     
     Poco::Thread log_thread;
     log_thread.start(runnable);
-    agentRequester->writeJsonAnswer();
+    agentRequester->writeJsonAnswer(args[0]);
     system("pause");
-    
+    ////////////////////////////////
+    //try dll use
+    std::string lib="libSender";
+    lib+=Poco::SharedLibrary::suffix();
+
+    Poco::ClassLoader<ISender> loader;
+    loader.loadLibrary(lib);
+    loader.instance("SenderImpl").testdll();
+    loader.unloadLibrary(lib);
+    ////////////////////////////////
     waitForTerminationRequest();
 }
 

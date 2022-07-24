@@ -9,16 +9,6 @@ std::string InStartSession{"(In startSession) "};
 std::string InGetResponce{"(In getResponce) "};
 
 Requester::Requester(){
-    /*initilizeLogger();
-
-    startSession(*getParameters(config_path));
-
-    Poco::RunnableAdapter<Requester> runnable (*this, &Requester::logging);
-    
-    Poco::Thread log_thread;
-    log_thread.start(runnable);
-    writeJsonAnswer();
-    system("pause");*/
 }
 
 Requester::~Requester(){
@@ -156,17 +146,32 @@ Poco::SharedPtr<Requester::ConnectData> Requester::getParameters(const std::stri
     
 }
 
-void Requester::writeJsonAnswer(){
-    
+void Requester::writeJsonAnswer(const std::string& file_path){
+
     Poco::JSON::Parser parser;
     Poco::Dynamic::Var parsed_json;
+    Poco::JSON::Object::Ptr pData;
+    Poco::File check(file_path);
     Poco::Net::HTTPResponse response;
     Poco::FileStream conf;
     try{
         Poco::ScopedLock lock(mutex);
 
-        session->sendRequest(*req);
-    
+        std::ostream& sended = session->sendRequest(*req);
+
+        if(check.exists())
+            conf.open(file_path, std::ios::in);
+        else 
+            throw Poco::Exception("");
+        
+        conf.open(file_path, std::ios::in);
+        pData = parser.parse(conf).extract<Poco::JSON::Object::Ptr>();
+        sended<<"username:"<<pData->getValue<std::string>("username")<<","
+        <<"uid:"<<pData->getValue<std::string>("uid")<<","
+        <<"name:"<<pData->getValue<std::string>("name")<<","
+        <<"area:"<<pData->getValue<std::string>("area")<<","
+        <<"service_class:"<<pData->getValue<std::string>("service_class");
+
         std::istream &ret = session->receiveResponse(response);
 
         parsed_json=parser.parse(ret);
@@ -181,14 +186,4 @@ void Requester::writeJsonAnswer(){
     catch(std::exception& e){
         logger.error(InGetResponce+e.what());
     }
-}
-
-POCO_BEGIN_MANIFEST(Requester)
-POCO_END_MANIFEST
-
-void pocoInitializeLibrary(){
-    std::cout << "ResponcerPlugin initializing" << std::endl;
-}
-void pocoUninitializeLibrary(){
-    std::cout << "ResponcerPlugin uninitializing" << std::endl;
 }

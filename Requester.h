@@ -37,7 +37,6 @@
 //for errors
 #include "FunctionErrorsVariables.h"
 
-#include "Poco/ClassLibrary.h"
 //all processes running in constructor of Requester class
 class Requester
 {
@@ -66,7 +65,7 @@ private:
     static void initilizeLogger(); //initilizer for logger
     void startSession(const ConnectData& key_address); 
     void logging();//process of logging
-    void writeJsonAnswer();
+    void writeJsonAnswer(const std::string& file_path);
     
     friend class PocoAgent;
 
