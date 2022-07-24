@@ -4,6 +4,8 @@
 #include "Requester.h"
 #include <Poco/Util/ServerApplication.h>
 #include <Poco/Util/Application.h>
+
+
 class PocoAgent: public Poco::Util::ServerApplication
 {
 private:
@@ -11,7 +13,7 @@ private:
 
     void defineOptions(Poco::Util::OptionSet& options);
 public:
-    PocoAgent(/* args */);
+    PocoAgent();
     ~PocoAgent();
     int main(const std::vector<std::string>& args);
 };

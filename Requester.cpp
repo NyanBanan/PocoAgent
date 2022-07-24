@@ -8,17 +8,17 @@ std::string InLogging{"(In logging) "};
 std::string InStartSession{"(In startSession) "};
 std::string InGetResponce{"(In getResponce) "};
 
-Requester::Requester(const std::string& config_path){
-    initilizeLogger();
-    setParameters(config_path);
-    startSession(this->key_address);
+Requester::Requester(){
+    /*initilizeLogger();
+
+    startSession(*getParameters(config_path));
 
     Poco::RunnableAdapter<Requester> runnable (*this, &Requester::logging);
     
     Poco::Thread log_thread;
     log_thread.start(runnable);
     writeJsonAnswer();
-    system("pause");
+    system("pause");*/
 }
 
 Requester::~Requester(){
@@ -46,13 +46,13 @@ void Requester::initilizeLogger(){
         Poco::FormattingChannel::Ptr formattingChannel(
             Poco::makeAuto<Poco::FormattingChannel>(patternFormatter, splitter_Channel));
        
-        logger.setChannel(formattingChannel);
+        Poco::Logger::root().setChannel(formattingChannel);
     }
     catch(Poco::Exception& e){
-        logger.error(InInitilizeLogger+e.name()+e.message());
+        Poco::Logger::root().error(InInitilizeLogger+e.name()+e.message());
     }
     catch(std::exception& e){
-        logger.error(InInitilizeLogger+e.what());
+        Poco::Logger::root().error(InInitilizeLogger+e.what());
     }
 }
 
@@ -116,7 +116,7 @@ void Requester::startSession(const ConnectData& key_address){
     }
 }
 
-void Requester::setParameters(const std::string& file_path){
+Poco::SharedPtr<Requester::ConnectData> Requester::getParameters(const std::string& file_path){
     Poco::FileStream conf;
     Poco::File check(file_path);
     Poco::JSON::Object::Ptr pParam;
@@ -130,11 +130,11 @@ void Requester::setParameters(const std::string& file_path){
     }
     catch(Poco::FileException& e){
         logger.error(InGetParametersConfigNotOpen+e.name()+" "+e.message());
-        return;
+        return nullptr;
     }
     catch(std::exception& e){
         logger.error(InGetParametersConfigNotOpen+e.what());
-        return;
+        return nullptr;
     }
 
     try{
@@ -142,15 +142,17 @@ void Requester::setParameters(const std::string& file_path){
     }
     catch(Poco::Exception& e){
         logger.error(InGetParametersConfigError+e.name()+" "+e.message());
-        return;
+        conf.close();
+        return nullptr;
     }
     catch(std::exception& e){
         logger.error(InGetParametersConfigError+e.what());
-        return;
+        conf.close();
+        return nullptr;
     }
-    conf.close();
-    key_address.key=pParam->getValue<std::string>("key");
-    key_address.address=pParam->getValue<std::string>("https");
+    std::string key=pParam->getValue<std::string>("key");
+    std::string address=pParam->getValue<std::string>("https");
+    return Poco::makeShared<Requester::ConnectData>(key,address);
     
 }
 

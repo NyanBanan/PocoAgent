@@ -41,14 +41,20 @@
 //all processes running in constructor of Requester class
 class Requester
 {
-private:
-
+public:
     struct ConnectData{
         std::string key;
         std::string address;
+        ConnectData(std::string _key,std::string _address){
+            key=_key;
+            address=_address;
+        }
     }; //Token to connect and URI adress
 
-    ConnectData key_address;
+    Requester();
+    ~Requester();
+private:
+
     Poco::SharedPtr<Poco::Net::HTTPSClientSession> session;//Pointer to connect session so as not to create it at every request
     Poco::SharedPtr<Poco::Net::HTTPRequest> req; //Like session pointer, but for request
     std::string path; 
@@ -56,13 +62,12 @@ private:
     Poco::Logger& logger=Poco::Logger::root();
 
 
-    void setParameters(const std::string& config_path); //initilizer of Token and URI
-    void initilizeLogger(); //initilizer for logger
+    Poco::SharedPtr<Requester::ConnectData> getParameters(const std::string& config_path); //initilizer of Token and URI
+    static void initilizeLogger(); //initilizer for logger
     void startSession(const ConnectData& key_address); 
     void logging();//process of logging
     void writeJsonAnswer();
     
-public:
-    Requester(const std::string& config_path);
-    ~Requester();
+    friend class PocoAgent;
+
 };
