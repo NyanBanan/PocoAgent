@@ -22,17 +22,17 @@ PocoAgent::~PocoAgent(){
 
 int PocoAgent::main(const std::vector<std::string>& args){
     initilizeLogger();
-    startSession(*(getParameters("parameters.json")));
+    startSession(*(getParameters(args[0])));
     pingPong();
     //startPingPong();
     waitForTerminationRequest();
 }
 
-void PocoAgent::defineOptions(Poco::Util::OptionSet& options){
+void PocoAgent::defineOptions(Poco::Util::OptionSet& options){//задается обязательный параметр - путь к конфигу
     Application::defineOptions(options);
     options.addOption(
         Poco::Util::Option("json-config", "j", "Give the program path to the JSON config")
-        .required(false)
+        .required(true)
         .repeatable(false));
 }
 
