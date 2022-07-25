@@ -11,8 +11,8 @@ add_compile_options(-Wall)
 find_package(Poco REQUIRED JSON Net Foundation Util NetSSL)
 find_package(OpenSSL REQUIRED)
 
-set(SRC PocoAgent.cpp Requester.cpp)
-set(HEADERS PocoAgent.h Requester.h FunctionErrorsVariables.h)
+set(SRC PocoAgent.cpp)
+set(HEADERS PocoAgent.h FunctionErrorsVariables.h)
 
 add_executable(PocoAgent ${SRC} ${HEADERS})
 add_library(Sender SHARED SenderImpl.cpp ISender.cpp)
