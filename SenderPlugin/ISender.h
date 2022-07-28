@@ -13,6 +13,8 @@
 #include <Poco/Net/HTTPRequest.h>
 #include <Poco/Net/HTTPResponse.h>
 #include <Poco/URI.h>
+#include "../Logger.h"
+
 
 class ISender
 {
@@ -21,5 +23,5 @@ private:
 public:
     ISender(/* args */);
     virtual ~ISender();
-    virtual void sendData(Poco::SharedPtr<Poco::Net::HTTPSClientSession> session, const Poco::File& param_file)=0;
+    virtual std::string routine() const = 0;
 };
