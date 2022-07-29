@@ -20,13 +20,14 @@ public:
             return "error";   
         }
         int i=0;
-        std::string res = "\nInterfaces:\n";
-        for(temp=interfaces;temp;temp=temp->next)
+        std::string res = "[";
+        for(temp=interfaces;temp->next;temp=temp->next)
         {
-            res += std::to_string(++i) +": "+ temp->name + "\n";
+            res +="\""+ std::to_string(++i)+":"+ std::string(temp->name) + "\",\n";
         }
-
+        res+= "\""+ std::to_string(++i)+":"+std::string(temp->name) + "\"]";
         pcap_freealldevs(interfaces);
+        std::replace(res.begin(),res.end(),'\\','/');
         return res;
     }
 };

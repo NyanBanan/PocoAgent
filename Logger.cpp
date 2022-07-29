@@ -15,7 +15,7 @@ void init_logger()
    
 
     Poco::AutoPtr<Poco::PatternFormatter> patternFormatter(
-    new Poco::PatternFormatter("[%Y-%m-%d  %H:%M:%s] [%U(%u)] %p: %t"));  //формат вывода времени
+    new Poco::PatternFormatter("[%Y-%m-%d  %H:%M] [%U(%u)] %p: %t"));  //формат вывода времени
 
     patternFormatter->setProperty("times", "local");  // Форматированное время отображается как местное время
 

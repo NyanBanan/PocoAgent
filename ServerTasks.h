@@ -17,11 +17,13 @@ class myServerTask: public Poco::Task
 	PluginLoader loader;
 	Poco::SharedPtr<ISender> pPlugin;
 	std::string libName;
-
+	std::string available_interfaces="None";
+	//Poco::SharedPtr<PocoAgent> agent;
 public:
 	myServerTask(); //Регистрируем задачу под именем "MyTask"
 	~myServerTask();
 	//Запуск задачи
 	void runTask();
     void cancel();
+	std::string getAvailableInterfaces();
 };

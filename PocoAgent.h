@@ -75,7 +75,7 @@ protected:
     void uninitialize();
 private:
     Poco::TaskManager tm;
-    Poco::TaskManager::TaskPtr p_task;
+    Poco::AutoPtr<myServerTask> p_task;
     Poco::SharedPtr<Poco::Net::HTTPSClientSession> session;//Pointer to connect session so as not to create it at every request
     Poco::SharedPtr<AgentParameters> agent_param;
     std::string path; 
@@ -87,12 +87,7 @@ private:
     static void initilizeLogger(); //initilizer for logger
     void startSession(const std::string& address); 
     void pingPong();//каждые 10 сек обращается к серверу и просматривает нужно ли собирать или уничтожать Sender 
-    //void startPingPong();//запускает pingPong в поток
-    //bool buildSender();//собирает Sender из dll
-    //bool runSender();//отправляет данные серверу
-    //void buildAndRunProcess();//отличается от последовательного вызова buildSender и runSender логгированием успешности работы и работой с булевыми сборки(dllStartBuild, dllEndBuild)
-    //bool destroySender();//уничтожает Sender
-    //void destroyProcess();//отличается от вызова destroySender логгированием успешности работы и работой с булевыми сборки(dllStartBuild, dllEndBuild)
+
     //void defineOptions(Poco::Util::OptionSet& options);
     void getKeyFromService(const std::string& username,const std::string& password,std::string& string_to_write_key_here);
     void getAgentsData();

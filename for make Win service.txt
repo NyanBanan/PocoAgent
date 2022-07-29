@@ -1,0 +1,1 @@
+sc create agentPoco binPath="D:\Diff Folders From C/Workbench/Code/newRepos/PocoAgent/build/PocoAgent.exe" DisplayName=TESTAGENT type=own start=auto

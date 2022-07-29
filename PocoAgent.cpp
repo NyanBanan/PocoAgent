@@ -142,7 +142,7 @@ void PocoAgent::getKeyFromService(const std::string& username,const std::string&
         else{
             log_error("Authorization error");
         }
-            log_information(std::to_string(response.getStatus()));
+            log_information(std::to_string(response.getStatus())+" "+response.getReason());
     }
     catch(Poco::Exception& e){
         log_error(" In get key from service ");
@@ -225,7 +225,7 @@ void PocoAgent::ipRequest(){
         //a.close();
         session->receiveResponse(response);
         log_information("An ip request was made to the server");
-        log_information(std::to_string(response.getStatus()));
+        log_information(std::to_string(response.getStatus())+" "+response.getReason());
     }
     catch(Poco::Exception& e){
         log_error(" In ip request ");
@@ -242,7 +242,7 @@ void PocoAgent::updateStatus(const bool& status){
         Poco::Net::HTTPResponse response;
         Poco::JSON::Parser parser;
         std::string body("{\"status\":"+std::to_string(status)+"}");
-        std::string path("/ids/api/service/update/status/"+std::to_string(agent_param->uid));
+        std::string path("/ids/api/service/update/status/"+std::to_string(agent_param->uid)+"/");
         Poco::Net::HTTPRequest req(Poco::Net::HTTPRequest::HTTP_POST,path,Poco::Net::HTTPMessage::HTTP_1_1);
         req.setCredentials("Token",agent_param->key);
         req.setContentLength(body.length());
@@ -255,7 +255,7 @@ void PocoAgent::updateStatus(const bool& status){
         else{ 
             log_error("Update status error");
         }
-            log_error(std::to_string(response.getStatus()));
+            log_information(std::to_string(response.getStatus())+" "+response.getReason());
     }
     catch(Poco::Exception& e){
         log_error(" In update status ");
@@ -272,7 +272,7 @@ void PocoAgent::updateState(const bool& state){
         Poco::Net::HTTPResponse response;
         Poco::JSON::Parser parser;
         std::string body("{\"state\":"+std::to_string(state)+"}");
-        std::string path("/ids/api/service/update/state/"+std::to_string(agent_param->uid));
+        std::string path("/ids/api/service/update/state/"+std::to_string(agent_param->uid)+"/");
         Poco::Net::HTTPRequest req(Poco::Net::HTTPRequest::HTTP_POST,path,Poco::Net::HTTPMessage::HTTP_1_1);
         req.setContentLength(body.length());
         req.setCredentials("Token",agent_param->key);
@@ -285,7 +285,7 @@ void PocoAgent::updateState(const bool& state){
         else{
             log_error("Update state error");
         }   
-            log_error(std::to_string(response.getStatus()));
+            log_information(std::to_string(response.getStatus())+" "+response.getReason());
     }
     catch(Poco::Exception& e){
         log_error(" In update state ");
@@ -306,7 +306,7 @@ void PocoAgent::createAgentOnServer(){
             +"\"status\":\""+std::to_string(agent_param->status)+"\","
             +"\"state\":\""+std::to_string(agent_param->state)+"\","
             +"\"active_interface\":\""+agent_param->active_interface+"\","
-            +"\"avaliable_interfaces\":[\""+agent_param->available_interfaces+"\"],"//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            +"\"avaliable_interfaces\":\""+p_task->getAvailableInterfaces()+"\","//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             +"\"ip_address\":\""+"127.0.0.1"+"\","
             +"\"service_class\":"+std::to_string(agent_param->service_class)+","
             +"\"key\":\""+agent_param->key+"\","
@@ -333,7 +333,7 @@ void PocoAgent::createAgentOnServer(){
         }
         else{
             log_error("Create agent error");
-            log_error(std::to_string(response.getStatus()));
+            log_error(std::to_string(response.getStatus())+" "+response.getReason());
         }
     }
     catch(Poco::Exception& e){
@@ -358,7 +358,7 @@ void PocoAgent::checkState(){
         std::istream& sres=session->receiveResponse(response);
         if(response.getStatus()==Poco::Net::HTTPResponse::HTTP_OK){
             log_information("A state request has been made to the server");
-            log_information(std::to_string(response.getStatus()));
+            log_information(std::to_string(response.getStatus())+" "+response.getReason());
             auto obj = parser.parse(sres).extract<Poco::JSON::Object::Ptr>();
             agent_param->state=obj->getValue<bool>("state");
             log_information("Agent state:"+std::to_string(agent_param->state));
@@ -368,7 +368,7 @@ void PocoAgent::checkState(){
         else{
             log_error("Receive status error");
         }
-            log_information(std::to_string(response.getStatus()));
+            log_information(std::to_string(response.getStatus())+" "+response.getReason());
     }
     catch(Poco::Exception& e){
         log_error(" In receive status ");
@@ -383,7 +383,7 @@ void PocoAgent::checkState(){
 void PocoAgent::updateActiveInterfaces(){
     Poco::Net::HTTPResponse response;
     Poco::JSON::Parser parser;
-    std::string body("{\"available_interfaces\":\""+agent_param->available_interfaces+"\"}");//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    std::string body("{\"available_interfaces\":"+p_task->getAvailableInterfaces()+"}");//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     std::string path ("/ids/api/service/update/available_interfaces/"+std::to_string(agent_param->uid)+"/");
     Poco::Net::HTTPRequest req(Poco::Net::HTTPRequest::HTTP_POST,path,Poco::Net::HTTPMessage::HTTP_1_1);
     req.setCredentials("Token",agent_param->key);
@@ -393,8 +393,8 @@ void PocoAgent::updateActiveInterfaces(){
         session->sendRequest(req)<<body;
         session->receiveResponse(response);
         log_information("The available interfaces have been sent to the server");
-        log_information(agent_param->available_interfaces);//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        log_information(std::to_string(response.getStatus()));
+        log_information(body);//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        log_information(std::to_string(response.getStatus())+" "+response.getReason());
     }
     catch(Poco::Exception& e){
         log_error(" In update interfaces ");
