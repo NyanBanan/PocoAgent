@@ -12,7 +12,7 @@ void PocoAgent::initialize(Poco::Util::Application& self){
 		
 	//Инициализируем ServerApplication
 	Poco::Util::ServerApplication::initialize(self);
-	p_task=Poco::makeAuto<myServerTask>();
+	
 	init_logger();
 }
 
@@ -25,10 +25,17 @@ void PocoAgent::uninitialize()
 int PocoAgent::main(const std::vector<std::string>& args){
     if(Poco::Environment::isWindows())
         setlocale(LC_ALL, "Russian");
+
+    Poco::TaskManager tm;
+    p_task=new myServerTask;
     tm.start(p_task);
+    
     setAgentParameters("C:/ngids/parameters.json");
-    pingPong();
-    //startPingPong();
+    //pingPong();
+    Poco::RunnableAdapter<PocoAgent> ra(*this, &PocoAgent::pingPong);
+    ra.run();
+        
+    
     waitForTerminationRequest();
     tm.cancelAll();
 	tm.joinAll();
@@ -176,6 +183,7 @@ void PocoAgent::tryIdentifyAgent(const std::string& key,const int& area_id,const
                 log_information("Agent identified, responced active state and interface");
                 agent_param->uid=tempObj->getValue<int>("id");
                 agent_param->state=true;
+                agent_param->status=true;
                 log_information("Assigned agent ID: " + std::to_string(agent_param->uid));
                 agent_param->active_interface=tempObj->getValue<std::string>("active_interface");
                 log_information("Current interface of the agent environment: " + agent_param->active_interface);
@@ -183,6 +191,7 @@ void PocoAgent::tryIdentifyAgent(const std::string& key,const int& area_id,const
                 try{
                     ipRequest();
                     updateStatus("0");
+                    updateStatus("1");
                     updateState("0");
                     updateState("1");
                     log_information("The state has been sent to the server for autorun");
@@ -406,116 +415,54 @@ void PocoAgent::updateActiveInterfaces(){
     }
 }
 
+void PocoAgent::startGetInterfaces(){
+    if(p_task->state()!=Poco::Task::TASK_RUNNING && p_task->state()!=Poco::Task::TASK_STARTING){
+        p_task->run();
+        while(p_task->state()==Poco::Task::TASK_STARTING){
+            log_information("Plugin starting");
+            Poco::Thread::sleep(5000);
+        }
+        agent_param->status=true;
+    }
+}
+
+void PocoAgent::stopGetInterfaces(){
+    if(p_task->state()!=Poco::Task::TASK_CANCELLING && p_task->state()!=Poco::Task::TASK_FINISHED){
+        p_task->clear();
+        p_task->cancel();
+        while(p_task->state()==Poco::Task::TASK_CANCELLING){
+            log_information("Plugin stopping");
+            Poco::Thread::sleep(3000);
+        }
+        agent_param->status=false;
+    }
+}
+
 void PocoAgent::pingPong(){
     while(true){
-        if(agent_param->status==0){
+        if(this->agent_param->status==0){
             log_information("Agent status 0, waiting for commands from the server...");
         }
-        ipRequest();
-        checkState();
-        updateStatus(agent_param->status);
-        updateActiveInterfaces();
+        this->ipRequest();
+        this->checkState();
+        this->updateStatus(agent_param->status);
+        this->updateActiveInterfaces();
 
-        std::list<Poco::TaskManager::TaskPtr> tmlist;
-        Poco::TaskManager::TaskList::iterator finded;
-        if(agent_param->state==true){//...............................................................................
-            tmlist=tm.taskList();
-            finded=std::find_if(tmlist.begin(),tmlist.end(), [&](const Poco::TaskManager::TaskPtr x){
-                return x->name()==p_task->name();
-            });
-            if(tmlist.end()!=finded){
-                if((*finded)->state()!=Poco::Task::TASK_STARTING && (*finded)->state()!=Poco::Task::TASK_RUNNING){
-                    tm.start(p_task);
-                }
-            }
-        }
-        else if(agent_param->state==false){
-            tmlist=tm.taskList();
-            finded=std::find_if(tmlist.begin(),tmlist.end(), [&](const Poco::TaskManager::TaskPtr x){
-                return x->name()==p_task->name();
-            });
-            if(tmlist.end()!=finded){
-                if((*finded)->state()!=Poco::Task::TASK_CANCELLING && (*finded)->state()!=Poco::Task::TASK_FINISHED){
-                    p_task->cancel();
-                }
-            }
-        }
-        Poco::Thread::sleep(10000);
-    }
-}
-/* bool PocoAgent::runSender(){
-    try{
-        //loader.instance("SenderImpl").sendData(session,parametersFile);
-        return true;
-    }
-    catch(Poco::Exception& e){
-        log_error(" In update state ");
-        log_error(e.message());
-        return false;
-    }
-    catch(std::exception& e){
-        logger.error(InRunSender+e.what());
-        return false;
-    } 
-}
-
- void PocoAgent::buildAndRunProcess(){
-    logger.warning("Sender start build");
-    //dllStartBuild=true;
-    //if(buildSender()){
-        logger.warning("Sender successfully builded");
-        //dllEndBuild=true;
-        if(runSender())
-            logger.warning("Data successfully sended");
-        else
-            logger.error("Data send failed");
-    }
-    else {
-        logger.error("build Sender failed");
-        //dllStartBuild=false;
+        if(this->agent_param->state==true)//...............................................................................
+            this->startGetInterfaces();
+        else if(this->agent_param->state==false)
+            this->stopGetInterfaces();
+        Poco::Thread::sleep(5000);
     }
 }
 
-bool PocoAgent::destroySender(){
-    try{
-        std::string lib="libSender";
-        lib+=Poco::SharedLibrary::suffix();
-        loader.unloadLibrary(lib);
-        return true;
-    }
-    catch(Poco::Exception& e){
-        logger.error(InDestroySender+e.name()+e.message());
-        return false;
-    }
-    catch(std::exception& e){
-        logger.error(InDestroySender+e.what());
-        return false;
-    } 
-}
+POCO_SERVER_MAIN(PocoAgent);
 
-void PocoAgent::destroyProcess(){
-    logger.warning("Sender start destroy");
-    //dllStartBuild=false;
-    if(destroySender()){
-        logger.warning("Sender successfully destroyed");
-        //dllEndBuild=false;
-    }
-    else{
-        logger.error("destroy Sender failed");
-        //dllStartBuild=true;
-    }
-} */
 
-//POCO_SERVER_MAIN(PocoAgent);
-int wmain(int argc, wchar_t** argv) {
-    try { 
-        PocoAgent app; 
-        return app.run(argc,argv);
-    }
-    catch (Poco::Exception& exc) {
-        std::cerr << exc.displayText() << std::endl;
-        return Poco::Util::Application::EXIT_SOFTWARE;
-    } 
-}
-
+/*Poco::TaskManager::TaskList tmlist=tm.taskList();
+    auto finded=std::find_if(tmlist.begin(),tmlist.end(), [&](const Poco::TaskManager::TaskPtr x){
+        return x->name()=="GetInterfaces";
+    });
+    if(tmlist.end()!=finded)
+        p_task=(*finded).cast<myServerTask>().get();*/
 
