@@ -20,7 +20,6 @@ private:
 public:
     Control() {
         poco_agent=Poco::makeShared<Poco::Util::WinService>("PocoAgent");
-        poco_agent->setStartup(Poco::Util::WinService::SVC_MANUAL_START);
         if(!poco_agent->isRegistered())
             poco_agent->registerService("\""+agent_file.path()+"\"");
     }
