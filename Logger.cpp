@@ -4,11 +4,14 @@
 
 void init_logger()
 {
+    Poco::File checkdir("C:/ngids");
     Poco::File check("C:/ngids/Work.log");
     Poco::AutoPtr<Poco::ConsoleChannel> console_channel(new Poco::ConsoleChannel);
     Poco::AutoPtr<Poco::FileChannel> file_channel(new Poco::FileChannel);
+    if(!checkdir.exists())
+        checkdir.createDirectory();
     if(!check.exists())
-            check.createFile();
+        check.createFile();
     file_channel->setProperty("path", "C:/ngids/Work.log");
     file_channel->setProperty("rotation", "10M");   // Режим ротации файла журнала
     file_channel->setProperty("archive", "timestamp");  // Режим архивирования файлов журнала
