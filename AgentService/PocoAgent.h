@@ -3,7 +3,6 @@
 #include <Poco/Util/ServerApplication.h>
 #include <Poco/Environment.h>
 #include "ServerTasks.h"
-#include "PluginController.h"
 
 class PocoAgent: public Poco::Util::ServerApplication
 {

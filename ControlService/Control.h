@@ -32,6 +32,11 @@ public:
             poco_agent->start();
     }
 
+    void stopAgent(){
+        if (poco_agent->isRunning())
+            poco_agent->stop();
+    }
+
     bool getAgentStatus(){
         if(poco_agent->isRunning())
             return true;

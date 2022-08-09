@@ -1,12 +1,11 @@
 #pragma once
 #include "RESTInter.h"
-#include "PluginController.h"
 
 #include "Poco/Task.h"
 #include "Poco/TaskManager.h"
 #include "Poco/DateTimeFormatter.h"
 #include <Poco/Util/Application.h>
-
+#include "LibraryLoader.h"
 #define SCAN_INTERVAL 5000
 
 

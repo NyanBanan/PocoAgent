@@ -1,26 +1,26 @@
 #pragma once
 #include "Poco/ClassLoader.h"
 #include "Poco/Manifest.h"
-#include "../SenderPlugin/ISender.h"
+#include "../Plugins/AbstractPlugin.h"
 #include <iostream>
 #include "../Logger.h"
 
-typedef Poco::ClassLoader<ISender> PluginLoader;
-typedef Poco::Manifest<ISender> PluginManifest;
+typedef Poco::ClassLoader<AbstractPlugin> PluginLoader;
+typedef Poco::Manifest<AbstractPlugin> PluginManifest;
 
 class LibraryLoader
 {
 private:
     PluginLoader loader;
-	ISender* pPlugin=nullptr;
+    AbstractPlugin* pPlugin=nullptr;
 	std::string libName;
 public:
     LibraryLoader(){
-        libName = "libSender";
+        libName = "libPlugin";
         libName += Poco::SharedLibrary::suffix(); // append .dll or .so
         try {
             loader.loadLibrary(libName);
-            pPlugin = loader.create("SenderPlugin");
+            pPlugin = loader.create("PluginGetInterfaces");
         }
         catch(Poco::Exception& e){
             log_error("Library load error, plugin from "+libName+" not work ");
@@ -34,11 +34,11 @@ public:
     }
     ~LibraryLoader(){
         if(pPlugin!=nullptr){
-            loader.classFor("SenderPlugin").autoDelete(pPlugin);
+            loader.classFor("PluginGetInterfaces").autoDelete(pPlugin);
             loader.unloadLibrary(libName);
         }
     }
-    ISender* getInstanse(){
+    AbstractPlugin* getInstanse(){
         return pPlugin;
     }
 };

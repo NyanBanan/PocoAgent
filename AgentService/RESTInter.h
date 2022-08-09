@@ -23,7 +23,9 @@
 #include <Poco/Net/HTTPSClientSession.h>
 #include <Poco/Net/Context.h>
 #include <Poco/SharedPtr.h>
-#include "PluginController.h"
+#include "../Plugins/AbstractPlugin.h"
+#include "../Logger.h"
+
 class RESTinter
 {
 public:
@@ -39,7 +41,7 @@ public:
         bool state;
         bool status;
         std::string active_interface;
-        AgentParameters(const std::string& _address="https://api.gfias.com",const std::string& _user_name="username",const std::string& _password="password", 
+        AgentParameters(const std::string& _address="https://api.gfias.com",const std::string& _user_name="username",const std::string& _password="password",
                     const std::string& _name="None", const int& _area=0, const std::string& _key="", const int& _service_class=0,  const bool& _state=false,const bool& _status=false,
                     const std::string& _active_interface="None",const int& _uid=1):
                     address(_address),user_name(_user_name),password(_password),uid(_uid),name(_name),area(_area),service_class(_service_class),
@@ -48,7 +50,7 @@ public:
     
 
 
-    RESTinter(ISender* plugin);
+    RESTinter(AbstractPlugin* _plugin);
     ~RESTinter();
     void getKeyFromService(const std::string& username,const std::string& password,std::string& string_to_write_key_here);
     //const Poco::SharedPtr<PocoAgent::AgentParameters> getAgentParam();
@@ -59,14 +61,20 @@ public:
     void updateState(const bool& state);
     void updateActiveInterfaces();
     void checkState();
-
+    /*bool getState();
+    bool getStatus();
+    void setState(const bool& _state);
+    void setStatus(const bool& _status);*/
     void pingPong();
+    void repairRegistration();
     void setAgentParameters(const std::string& file_path); //initilizer of Token and URI
-    void startSession(const std::string& address); 
+    void startSession(const std::string& address);
+    void startPlugin();
+    void stopPlugin();
 private:
     Poco::SharedPtr<Poco::Net::HTTPSClientSession> session;//Pointer to connect session so as not to create it at every request
     Poco::SharedPtr<AgentParameters> agent_param;
-    Poco::SharedPtr<PluginTaskController> pm;
+    AbstractPlugin* plugin;
     Poco::Mutex mutex;
 };
 

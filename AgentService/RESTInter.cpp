@@ -1,9 +1,9 @@
 #include "RESTInter.h"
-RESTinter::RESTinter(ISender* plugin){
-    pm = Poco::makeShared<PluginTaskController>(plugin);
+RESTinter::RESTinter(AbstractPlugin* _plugin){
+    plugin = _plugin;
 }
 RESTinter::~RESTinter(){
-    pm->stopPlugin();
+    stopPlugin();
     updateStatus(0);
     updateState(0);
 }
@@ -154,7 +154,7 @@ void RESTinter::tryIdentifyAgent(const std::string& key,const int& area_id,const
                     updateStatus("1");
                     updateState("0");
                     updateState("1");
-                    pm->startPlugin();
+                    plugin->start();
                     log_information("The state has been sent to the server for autorun");
                     break;
                 }
@@ -190,10 +190,11 @@ int RESTinter::ipRequest(){
         req.setCredentials("Token",agent_param->key);
         req.setContentLength(body.length());
         req.setContentType("application/json");
+
+        session->sendRequest(req)<<body;
         //Poco::File f("test.json");
         //f.createFile();
         //Poco::FileStream a(f.path(),std::ios::out);
-        session->sendRequest(req)<<body;
         //a.close();
         session->receiveResponse(response);
         log_information("An ip request was made to the server");
@@ -275,6 +276,39 @@ void RESTinter::updateState(const bool& state){
     }
 }
 
+void RESTinter::checkState(){
+    Poco::Net::HTTPResponse response;
+    Poco::JSON::Parser parser;
+    std::string path ("/ids/api/service/list/"+std::to_string(agent_param->uid)+"/");
+    Poco::Net::HTTPRequest req(Poco::Net::HTTPRequest::HTTP_GET,path,Poco::Net::HTTPMessage::HTTP_1_1);
+    req.setCredentials("Token",agent_param->key);
+    req.setContentType("application/json");
+    try{
+        session->sendRequest(req);
+        std::istream& sres=session->receiveResponse(response);
+        if(response.getStatus()==Poco::Net::HTTPResponse::HTTP_OK){
+            log_information("A state request has been made to the server");
+            log_information(std::to_string(response.getStatus())+" "+response.getReason());
+            auto obj = parser.parse(sres).extract<Poco::JSON::Object::Ptr>();
+            agent_param->state=obj->getValue<bool>("state");
+            log_information("Agent state:"+std::to_string(agent_param->state));
+            agent_param->active_interface=obj->getValue<std::string>("active_interface");
+            log_information("Active interface of the agent enviroment:"+agent_param->active_interface);
+        }
+        else{
+            log_error("Receive status error");
+        }
+        log_information(std::to_string(response.getStatus())+" "+response.getReason());
+    }
+    catch(Poco::Exception& e){
+        log_error(" In receive status ");
+        log_error(e.name());
+    }
+    catch(std::exception& e){
+        log_error(" In receive status ");
+        log_error(e.what());
+    }
+}
 
 void RESTinter::createAgentOnServer(){
     log_information("Agent creating on server");
@@ -286,18 +320,17 @@ void RESTinter::createAgentOnServer(){
             +"\"status\":\""+std::to_string(agent_param->status)+"\","
             +"\"state\":\""+std::to_string(agent_param->state)+"\","
             +"\"active_interface\":\""+agent_param->active_interface+"\","
-            +"\"avaliable_interfaces\":\""+pm->getPluginInterfacesString()+"\","//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            +"\"avaliable_interfaces\":"+plugin->getData()+","//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             +"\"ip_address\":\""+"127.0.0.1"+"\","
             +"\"service_class\":"+std::to_string(agent_param->service_class)+","
             +"\"key\":\""+agent_param->key+"\","
             +"\"area\":"+std::to_string(agent_param->area)+","
             +"\"params\":"+"[\"1\",\"1\"]"+"}");
-            Poco::File f("test.json");
+            /*Poco::File f("test.json");
         f.createFile();
         Poco::FileStream a(f.path(),std::ios::out);
         a<<body;
-        std::cout<<body;
-        a.close();
+        a.close();*/
     Poco::Net::HTTPRequest req(Poco::Net::HTTPRequest::HTTP_POST,path,Poco::Net::HTTPMessage::HTTP_1_1);
     req.setContentLength(body.length());
     req.setCredentials("Token",agent_param->key);
@@ -326,44 +359,17 @@ void RESTinter::createAgentOnServer(){
     }
 }
 
-void RESTinter::checkState(){
-    Poco::Net::HTTPResponse response;
-    Poco::JSON::Parser parser;
-    std::string path ("/ids/api/service/list/"+std::to_string(agent_param->uid)+"/");
-    Poco::Net::HTTPRequest req(Poco::Net::HTTPRequest::HTTP_GET,path,Poco::Net::HTTPMessage::HTTP_1_1);
-    req.setCredentials("Token",agent_param->key);
-    req.setContentType("application/json");
-    try{
-        session->sendRequest(req);
-        std::istream& sres=session->receiveResponse(response);
-        if(response.getStatus()==Poco::Net::HTTPResponse::HTTP_OK){
-            log_information("A state request has been made to the server");
-            log_information(std::to_string(response.getStatus())+" "+response.getReason());
-            auto obj = parser.parse(sres).extract<Poco::JSON::Object::Ptr>();
-            agent_param->state=obj->getValue<bool>("state");
-            log_information("Agent state:"+std::to_string(agent_param->state));
-            agent_param->active_interface=obj->getValue<std::string>("active_interface");
-            log_information("Active interface of the agent enviroment:"+agent_param->active_interface);
-        }
-        else{
-            log_error("Receive status error");
-        }
-            log_information(std::to_string(response.getStatus())+" "+response.getReason());
-    }
-    catch(Poco::Exception& e){
-        log_error(" In receive status ");
-        log_error(e.name());
-    }
-    catch(std::exception& e){
-        log_error(" In receive status ");
-        log_error(e.what());
-    }
-}
+
 
 void RESTinter::updateActiveInterfaces(){
     Poco::Net::HTTPResponse response;
     Poco::JSON::Parser parser;
-    std::string body("{\"available_interfaces\":"+pm->getPluginInterfacesString()+"}");//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    std::string body("{\"available_interfaces\":"+plugin->getData()+"}");//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    /*Poco::File f("test.json");
+    f.createFile();
+    Poco::FileStream a(f.path(),std::ios::out);
+    a<<body;
+    a.close();*/
     std::string path ("/ids/api/service/update/available_interfaces/"+std::to_string(agent_param->uid)+"/");
     Poco::Net::HTTPRequest req(Poco::Net::HTTPRequest::HTTP_POST,path,Poco::Net::HTTPMessage::HTTP_1_1);
     req.setCredentials("Token",agent_param->key);
@@ -385,8 +391,7 @@ void RESTinter::updateActiveInterfaces(){
         log_error(e.what());
     }
 }
-
-void RESTinter::pingPong(){
+void RESTinter::repairRegistration(){
     if(agent_param->key.empty()){
         if (agent_param->name.empty() || agent_param->user_name.empty() || agent_param->password.empty()) {
             log_information("Name, password and user_name fields must be filled in parameters file");
@@ -397,7 +402,11 @@ void RESTinter::pingPong(){
             tryIdentifyAgent(agent_param->key,agent_param->area,agent_param->name);
         }
     }
+}
 
+
+void RESTinter::pingPong(){
+    repairRegistration();
     if(ipRequest()==200) {
         if(!agent_param->status)
             log_information("Agent status 0, waiting for commands from the server...");
@@ -407,14 +416,48 @@ void RESTinter::pingPong(){
             updateActiveInterfaces();
 
         if (agent_param->state && !agent_param->status) {
-            pm->startPlugin();
-            agent_param->status = true;
+            startPlugin();
         }
         else if (!agent_param->state && agent_param->status) {
-            pm->stopPlugin();
-            agent_param->status = false;
+            stopPlugin();
         }
     }
     else
         log_error("Connect to REST error");
 }
+
+void RESTinter::stopPlugin(){
+    std::string ps(plugin->getStatus());
+    if(ps!="stopped" && ps!="stopping") {
+        plugin->stop();
+
+        while (plugin->getStatus() != "stopped") {}
+        agent_param->status = false;
+    }
+}
+
+void RESTinter::startPlugin(){
+    std::string ps(plugin->getStatus());
+    if(ps!="started" && ps!="starting") {
+        plugin->start();
+        while (plugin->getStatus() != "started") {}
+        agent_param->status = true;
+    }
+}
+
+/*
+bool RESTinter::getState() {
+    return agent_param->state;
+}
+
+bool RESTinter::getStatus() {
+    return agent_param->status;
+}
+
+void RESTinter::setState(const bool &_state) {
+    agent_param->state=_state;
+}
+
+void RESTinter::setStatus(const bool &_status) {
+    agent_param->status=_status;
+}*/
