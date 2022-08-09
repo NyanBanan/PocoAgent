@@ -15,7 +15,6 @@ set( SOURCE_LIB
         Plugins/AbstractPlugin.cpp
         Plugins/plugin/PcapMethods.cpp
         Plugins/plugin/PcapStatistics.cpp
-        ../Logger.cpp
         ../TaskFactory.cpp
         Plugins/AbstractPlugin.h
         Plugins/plugin/PcapMethods.h
