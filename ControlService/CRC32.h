@@ -85,13 +85,14 @@ private:
             0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D
     };
 
-    static unsigned int Crc32forByte(const char* buf,const std::streamsize& length,unsigned long crc = 0xFFFFFFFFUL)
+    static unsigned int Crc32(const char* buf,const std::streamsize& length,unsigned long crc = 0xFFFFFFFFUL)
     {
         unsigned int i=0;
         while (i<length)
             crc = (crc >> 8) ^ Crc32Table[(crc ^ buf[i++]) & 0xFF];
         return crc;
     }
+
 public:
     static unsigned int Crc32forFile(const std::string& file){
         char ch[BUFF_SIZE];
@@ -99,7 +100,7 @@ public:
         std::ifstream fin(file,std::ios::in);
         while(!fin.eof()){
             fin.read(ch,BUFF_SIZE);
-            crc=Crc32forByte(ch,fin.gcount(),crc);
+            crc=Crc32(ch,fin.gcount(),crc);
         }
         fin.close();
         return crc^0xFFFFFFFFUL;

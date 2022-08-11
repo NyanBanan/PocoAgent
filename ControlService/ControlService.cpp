@@ -18,6 +18,7 @@ void ControlService::uninitialize()
 int ControlService::main(const std::vector<std::string>& args){
     {
         ControlTaskController control(new Control);
+        log_information(control.getControlledPointer()->decodeWriteHash(control.getControlledPointer()->handWriteHash("PocoAgent001")));
         control.startControlTask();
         waitForTerminationRequest();
     }

@@ -7,9 +7,12 @@
 #include "Poco/Util/WinService.h"
 #include "Poco/Path.h"
 #include "Poco/File.h"
+#include "Poco/JSON/Parser.h"
 #include "Poco/RegularExpression.h"
 #include "CRC32.h"
 #include "../Logger.h"
+#include "Poco/NumberFormatter.h"
+#include "Poco/NumberParser.h"
 class Control {
 private:
     Poco::SharedPtr<Poco::Util::WinService> poco_agent;
@@ -71,7 +74,38 @@ public:
             return 0;
     }
 
-    static std::string getVersion(const std::string& path) {
+    static std::string handWriteHash(const std::string& str){
+        std::string res;
+        int len=str.length();
+        res+=Poco::NumberFormatter::formatHex(str.length()^0xAE,2);
+        for (auto c:str){
+            res+=Poco::NumberFormatter::formatHex((c^0xAE)-len,2);
+        }
+        return res;
+    }
+
+    static std::string decodeWriteHash(const std::string& hash){
+        std::string res;
+        std::string temp;
+        temp=hash[0];
+        temp+=hash[1];
+        int len = Poco::NumberParser::parseHex(temp)^0xAE;
+        for (int i=2;i<(len+1)*2;i+=2){
+            temp=hash[i];
+            temp+=hash[i+1];
+            res+=(Poco::NumberParser::parseHex(temp)+len)^0xAE;
+        }
+        return res;
+    }
+    //static std::string getver(){
+        //getV
+    //}
+    static std::string getVersion(const std::string& path){
+        Poco::JSON::Parser parser;
+        auto version_obj=parser.parse(path).extract<Poco::JSON::Object::Ptr>();
+        return version_obj->getValue<std::string>("Version");
+    }
+    /*static std::string getVersion(const std::string& path) {
         std::string version = "error";
         DWORD verHandle = 0;
         UINT size = 0;
@@ -103,5 +137,5 @@ public:
             delete[] verData;
         }
         return version;
-    }
+    }*/
 };

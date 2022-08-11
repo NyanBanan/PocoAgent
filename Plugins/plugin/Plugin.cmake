@@ -6,10 +6,11 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_compile_options(-Wall)
 
-project(plugin CXX)
+project(Plugin CXX)
 
 find_package(Poco REQUIRED Foundation Util)
-
+set(VERSION \"0.0.1\")
+configure_file("${CMAKE_CURRENT_LIST_DIR}/version.json.in" "${CMAKE_CURRENT_LIST_DIR}/${PROJECT_NAME}_version.json")
 set( SOURCE_LIB
         Plugins/plugin/PluginLibrary.cpp
         Plugins/AbstractPlugin.cpp
