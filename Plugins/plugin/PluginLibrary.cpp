@@ -8,7 +8,7 @@
 //#include "Poco/ThreadPool.h"
 
 #include "../AbstractPlugin.h"
-#include "../../../../../ngidsagentmod/Logger.h"
+#include "../../Logger.h"
 #include "PcapMethods.h"
 #include "../../TaskFactory.h"
 
