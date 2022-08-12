@@ -27,10 +27,10 @@ set( SOURCE_LIB
 set ( CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON )	
 
 include_directories("C:/msys64/mingw64/include")
-include_directories("C:/npcap-1/include")
+include_directories("C:/npcap-sdk-1.13/include")
 
 add_library(Plugin SHARED ${SOURCE_LIB} )
 
 target_link_libraries(Plugin PRIVATE Poco::Foundation Poco::Util)
-target_link_libraries(Plugin PRIVATE "C:/npcap-1/Lib/x64/wpcap.lib")
-target_link_libraries(Plugin PRIVATE "C:/npcap-1/Lib/x64/Packet.lib")
+target_link_libraries(Plugin PRIVATE "C:/npcap-sdk-1.13/Lib/x64/wpcap.lib")
+target_link_libraries(Plugin PRIVATE "C:/npcap-sdk-1.13/Lib/x64/Packet.lib")
