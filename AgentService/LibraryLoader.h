@@ -16,7 +16,7 @@ private:
 	std::string libName;
 public:
     LibraryLoader(){
-        libName = "libPlugin";
+        libName = "Plugins/libPlugin";
         libName += Poco::SharedLibrary::suffix(); // append .dll or .so
         try {
             loader.loadLibrary(libName);

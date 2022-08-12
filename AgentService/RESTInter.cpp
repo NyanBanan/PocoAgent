@@ -154,7 +154,7 @@ void RESTinter::tryIdentifyAgent(const std::string& key,const int& area_id,const
                     updateStatus("1");
                     updateState("0");
                     updateState("1");
-                    plugin->start();
+                    startPlugin();
                     log_information("The state has been sent to the server for autorun");
                     break;
                 }
@@ -320,7 +320,7 @@ void RESTinter::createAgentOnServer(){
             +"\"status\":\""+std::to_string(agent_param->status)+"\","
             +"\"state\":\""+std::to_string(agent_param->state)+"\","
             +"\"active_interface\":\""+agent_param->active_interface+"\","
-            +"\"avaliable_interfaces\":"+plugin->getData()+","//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            +"\"avaliable_interfaces\":"+getPluginData()+","//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             +"\"ip_address\":\""+"127.0.0.1"+"\","
             +"\"service_class\":"+std::to_string(agent_param->service_class)+","
             +"\"key\":\""+agent_param->key+"\","
@@ -364,7 +364,7 @@ void RESTinter::createAgentOnServer(){
 void RESTinter::updateActiveInterfaces(){
     Poco::Net::HTTPResponse response;
     Poco::JSON::Parser parser;
-    std::string body("{\"available_interfaces\":"+plugin->getData()+"}");//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    std::string body("{\"available_interfaces\":"+getPluginData()+"}");//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     /*Poco::File f("test.json");
     f.createFile();
     Poco::FileStream a(f.path(),std::ios::out);
@@ -407,6 +407,7 @@ void RESTinter::repairRegistration(){
 
 void RESTinter::pingPong(){
     repairRegistration();
+    log_information (Poco::Path::current());
     if(ipRequest()==200) {
         if(!agent_param->status)
             log_information("Agent status 0, waiting for commands from the server...");
@@ -427,22 +428,37 @@ void RESTinter::pingPong(){
 }
 
 void RESTinter::stopPlugin(){
-    std::string ps(plugin->getStatus());
-    if(ps!="stopped" && ps!="stopping") {
-        plugin->stop();
+    if(plugin!=nullptr) {
+        std::string ps(plugin->getStatus());
+        if (ps != "stopped" && ps != "stopping") {
+            plugin->stop();
 
-        while (plugin->getStatus() != "stopped") {}
-        agent_param->status = false;
+            while (plugin->getStatus() != "stopped") {}
+            agent_param->status = false;
+        }
     }
+    else
+        log_error("plugin doesn`t work");
 }
 
 void RESTinter::startPlugin(){
-    std::string ps(plugin->getStatus());
-    if(ps!="started" && ps!="starting") {
-        plugin->start();
-        while (plugin->getStatus() != "started") {}
-        agent_param->status = true;
+    if(plugin!=nullptr) {
+        std::string ps(plugin->getStatus());
+        if (ps != "started" && ps != "starting") {
+            plugin->start();
+            while (plugin->getStatus() != "started") {}
+            agent_param->status = true;
+        }
     }
+    else
+        log_error("plugin doesn`t work");
+}
+
+std::string RESTinter::getPluginData(){
+    if(plugin!=nullptr)
+        return plugin->getData();
+    else
+        return "\"Plugin doesn`t work\"";
 }
 
 /*

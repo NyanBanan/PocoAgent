@@ -6,8 +6,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(NPCAP_ROOT "C:/npcap-")
-
 add_compile_options(-Wall)
 find_package(Poco REQUIRED JSON Net Foundation Util NetSSL)
 find_package(OpenSSL REQUIRED)
@@ -19,4 +17,4 @@ set(HEADERS AgentService/PocoAgent.h AgentService/ServerTasks.h ../Logger.h Agen
 
 add_executable(PocoAgent ${SRC} ${HEADERS} )
 #target_sources(PocoAgent PRIVATE AgentService/AgentService.rc)
-target_link_libraries(PocoAgent PRIVATE Poco::Foundation Poco::JSON Poco::Util Poco::Net Poco::NetSSL libSender)
+target_link_libraries(PocoAgent PRIVATE Poco::Foundation Poco::JSON Poco::Util Poco::Net Poco::NetSSL libPlugin)

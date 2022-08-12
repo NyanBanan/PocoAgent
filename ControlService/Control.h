@@ -16,15 +16,13 @@
 class Control {
 private:
     Poco::SharedPtr<Poco::Util::WinService> poco_agent;
-    Poco::File plugins_directory = Poco::Path::current() + "Plugins";
-    Poco::File agent_file = Poco::Path::current() + "PocoAgent.exe";
-    Poco::File my_file = Poco::Path::current() + "ControlService.exe";
+    Poco::File plugins_directory = Poco::Path::current() + "PocoAgent/Plugins";
+    Poco::File agent_file = Poco::Path::current() + "PocoAgent/PocoAgent.exe";
+    Poco::File my_file = Poco::Path::current() + "PocoAgent/ControlService.exe";
     Poco::Mutex mutex;
 public:
     Control() {
         poco_agent=Poco::makeShared<Poco::Util::WinService>("PocoAgent");
-        if(!poco_agent->isRegistered())
-            poco_agent->registerService("\""+agent_file.path()+"\"");
     }
 
     ~Control(){

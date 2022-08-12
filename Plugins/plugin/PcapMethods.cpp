@@ -1,6 +1,6 @@
 #include "pcap.h"
 
-#include "../../../../../ngidsagentmod/Logger.h"
+#include "../../Logger.h"
 #include "PcapMethods.h"
 
 
