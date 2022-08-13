@@ -71,6 +71,7 @@ public:
     void startSession(const std::string& address);
     void startPlugin();
     void stopPlugin();
+    std::string getPluginData();
 private:
     Poco::SharedPtr<Poco::Net::HTTPSClientSession> session;//Pointer to connect session so as not to create it at every request
     Poco::SharedPtr<AgentParameters> agent_param;
