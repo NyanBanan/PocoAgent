@@ -13,6 +13,8 @@
 #include "../Logger.h"
 #include "Poco/NumberFormatter.h"
 #include "Poco/NumberParser.h"
+#include "Poco/Util/WinRegistryKey.h"
+#include "Poco/Environment.h"
 class Control {
 private:
     Poco::SharedPtr<Poco::Util::WinService> poco_agent;
@@ -103,6 +105,19 @@ public:
         auto version_obj=parser.parse(path).extract<Poco::JSON::Object::Ptr>();
         return version_obj->getValue<std::string>("Version");
     }
+
+    static std::string getAgentName(){
+        Poco::Util::WinRegistryKey registryKey("HKEY_LOCAL_MACHINE/SOFTWARE/Microsoft/Cryptography");
+        std::string machine_name;
+        machine_name=Poco::Environment::osDisplayName()+" ";
+        if(registryKey.exists("MachineGuid"))
+            machine_name += registryKey.getString("MachineGuid");
+        else
+            machine_name += "error";
+        return machine_name;
+    }
+
+
     /*static std::string getVersion(const std::string& path) {
         std::string version = "error";
         DWORD verHandle = 0;

@@ -53,7 +53,7 @@ void RESTinter::setAgentParameters(const std::string& file_path){
                      << "\"username\":\"\",\n"
                      << "\"password\":\"\",\n"
                      << "\"name\":\"LocalNetAgent\",\n"
-                     << "\"area\":\"1\",\n"
+                     << "\"area_id\":\"1\",\n"
                      << "\"service_class\":\"0\",\n"
                      << "\"key\":\"\"\n}";
                 conf.close();
@@ -77,17 +77,14 @@ void RESTinter::setAgentParameters(const std::string& file_path){
             getKeyFromService(username,password,key);
         agent_param = Poco::makeShared<RESTinter::AgentParameters>(address,username,password,name,area,key);
         tryIdentifyAgent(key,area,name);
-        return;
     }   
     catch(Poco::Exception& e){
         log_error(" In set agent parameters ");
         log_error(e.name());
-        return;
     }
     catch(std::exception& e){
         log_error(" In set agent parameters ");
         log_error(e.what());
-        return;
     }
     }
     
